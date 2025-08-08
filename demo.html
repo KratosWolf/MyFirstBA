@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏦 MyFirstBA - Demo das Novas Funcionalidades</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .demo-title {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 10px 0;
+        }
+        .feature-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border-left: 4px solid #4299e1;
+        }
+        .feature-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-badge {
+            background: #48bb78;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .demo-mockup {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .phone-mockup {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+        .nav-tabs {
+            display: flex;
+            justify-content: space-between;
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 6px 2px;
+            border: none;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .nav-tab.active {
+            background: linear-gradient(135deg, #4299e1 0%, #667eea 100%);
+            color: white;
+        }
+        .nav-tab.inactive {
+            background: transparent;
+            color: #64748b;
+        }
+        .tab-content {
+            text-align: center;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            min-height: 200px;
+        }
+        .gamification-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .points-badge {
+            background: #fef3c7;
+            color: #d97706;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .medal-badge {
+            background: #f0f9ff;
+            color: #0369a1;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 4px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <div style="font-size: 48px;">🏦</div>
+            <h1 class="demo-title">MyFirstBA</h1>
+            <p style="color: #718096;">Demo das Novas Funcionalidades Implementadas</p>
+        </div>
+
+        <div class="feature-section">
+            <h2 class="feature-title">🏆 Nova Aba "Regras" - Educação Financeira</h2>
+            <ul class="feature-list">
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Guia completo sobre como ganhar pontos</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Explicação das medalhas disponíveis</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Sistema de níveis transparente</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Status atual personalizado da criança</li>
+            </ul>
+        </div>
+
+        <div class="demo-mockup">
+            <div class="phone-mockup">
+                <div class="nav-tabs">
+                    <button class="nav-tab inactive">🏠 Início</button>
+                    <button class="nav-tab inactive">🎯 Sonhos</button>
+                    <button class="nav-tab inactive">📊 Gastos</button>
+                    <button class="nav-tab active">🏆 Regras</button>
+                </div>
+                <div class="tab-content">
+                    <h3 style="margin: 0 0 20px 0;">🎮 Como Ganhar Pontos</h3>
+                    <div class="gamification-card">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 24px;">💰</span>
+                            <div style="text-align: left;">
+                                <div class="points-badge">+10 pontos</div>
+                                <div style="font-size: 12px; color: #4a5568;">Investir nos seus sonhos</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gamification-card">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 24px;">🌟</span>
+                            <div style="text-align: left;">
+                                <div class="points-badge">+50 pontos</div>
+                                <div style="font-size: 12px; color: #4a5568;">Completar um sonho!</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-section">
+            <h2 class="feature-title">💰 Sistema de Investimento em Sonhos</h2>
+            <ul class="feature-list">
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Botão "💰 Colocar Dinheiro" nos sonhos</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Validação de saldo disponível</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Transações automáticas no extrato</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Celebração quando sonho é completado</li>
+            </ul>
+        </div>
+
+        <div class="feature-section">
+            <h2 class="feature-title">🎮 Gamificação Automática</h2>
+            <ul class="feature-list">
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Pontos automáticos (+10 investimento, +50 sonho completo)</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Medalhas dinâmicas baseadas em ações</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Sistema de streak de poupança</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Níveis baseados em pontos (100 pts = +1 nível)</li>
+            </ul>
+            
+            <div style="margin-top: 15px;">
+                <strong>Medalhas Disponíveis:</strong><br>
+                <span class="medal-badge">💎 Investidor de Sonhos</span>
+                <span class="medal-badge">🌟 Realizador de Sonhos</span>
+                <span class="medal-badge">📅 Poupador da Semana</span>
+            </div>
+        </div>
+
+        <div class="feature-section">
+            <h2 class="feature-title">📊 Limites Visuais Melhorados</h2>
+            <ul class="feature-list">
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Cards mostram gastos mensais E trimestrais</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Barras de progresso coloridas (verde → amarelo → vermelho)</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Indicação clara do trimestre atual (Jan-Mar, Abr-Jun, etc.)</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Sistema de reset trimestral para pais</li>
+            </ul>
+        </div>
+
+        <div class="feature-section">
+            <h2 class="feature-title">⚠️ Controle de Limites</h2>
+            <ul class="feature-list">
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Avisos quando limite será excedido</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Confirmação parental para overrides</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Botão "🔄 Reiniciar Trimestre" para pais</li>
+                <li><span class="status-badge">✅ IMPLEMENTADO</span> Reset automático de gastos por trimestre</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding: 20px; background: #f0fdf4; border-radius: 12px; border: 2px solid #bbf7d0;">
+            <h3 style="color: #166534; margin: 0 0 10px 0;">🎉 Todas as Funcionalidades Implementadas!</h3>
+            <p style="color: #166534; margin: 0;">O sistema agora está completo com educação financeira gamificada, controles parentais avançados e transparência total para as crianças.</p>
+        </div>
+    </div>
+</body>
+</html>
