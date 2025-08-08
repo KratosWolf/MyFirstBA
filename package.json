@@ -1,0 +1,35 @@
+{
+  "name": "myfirstba",
+  "version": "1.0.0",
+  "description": "First Business Automation project with GitHub repository configuration and deployment strategy",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"No build process configured yet\"",
+    "lint": "echo \"No linting configured yet\"",
+    "commit": "cz",
+    "semantic-release": "semantic-release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KratosWolf/MyFirstBA.git"
+  },
+  "keywords": [
+    "business-automation",
+    "github-actions",
+    "ci-cd",
+    "deployment",
+    "vercel"
+  ],
+  "author": "Tiago Fernandes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/KratosWolf/MyFirstBA/issues"
+  },
+  "homepage": "https://github.com/KratosWolf/MyFirstBA#readme",
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  }
+}
