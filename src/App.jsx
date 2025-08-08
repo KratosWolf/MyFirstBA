@@ -7,7 +7,9 @@ function App() {
   const [showPinEntry, setShowPinEntry] = useState(false)
   const [selectedChild, setSelectedChild] = useState(null)
   const [pin, setPin] = useState('')
-  const [currentScreen, setCurrentScreen] = useState('login') // 'login' | 'dashboard' | 'goals' | 'requests' | etc.
+  const [currentScreen, setCurrentScreen] = useState('login') // 'login' | 'dashboard' | 'goals' | 'requests' | 'new-goal' | 'new-request' | etc.
+  const [newGoal, setNewGoal] = useState({ name: '', target: '', emoji: '🎯' })
+  const [newRequest, setNewRequest] = useState({ item: '', price: '' })
 
   // Kids data with PINs
   const [kidsData, setKidsData] = useState({
@@ -102,12 +104,122 @@ function App() {
   }
 
   const handleApproveRequest = (requestId) => {
+    const request = pendingRequests.find(req => req.id === requestId)
+    if (request) {
+      // Find which child made the request
+      const childKey = Object.keys(kidsData).find(key => 
+        kidsData[key].name === request.child
+      )
+      
+      if (childKey) {
+        // Update child's balance and add transaction
+        setKidsData(prev => ({
+          ...prev,
+          [childKey]: {
+            ...prev[childKey],
+            balance: prev[childKey].balance - request.price,
+            transactions: [
+              {
+                id: Date.now(),
+                type: 'expense',
+                description: `Compra: ${request.item}`,
+                amount: -request.price,
+                date: 'Agora'
+              },
+              ...prev[childKey].transactions
+            ],
+            requests: prev[childKey].requests.map(req => 
+              req.id === requestId ? { ...req, status: 'approved' } : req
+            )
+          }
+        }))
+      }
+    }
+    
+    // Remove from pending requests
     setPendingRequests(prev => prev.filter(req => req.id !== requestId))
-    // Add logic to update child's balance and transactions
   }
 
   const handleRejectRequest = (requestId) => {
+    const request = pendingRequests.find(req => req.id === requestId)
+    if (request) {
+      // Find which child made the request
+      const childKey = Object.keys(kidsData).find(key => 
+        kidsData[key].name === request.child
+      )
+      
+      if (childKey) {
+        // Update child's request status
+        setKidsData(prev => ({
+          ...prev,
+          [childKey]: {
+            ...prev[childKey],
+            requests: prev[childKey].requests.map(req => 
+              req.id === requestId ? { ...req, status: 'rejected' } : req
+            )
+          }
+        }))
+      }
+    }
+    
+    // Remove from pending requests
     setPendingRequests(prev => prev.filter(req => req.id !== requestId))
+  }
+
+  const handleAddGoal = () => {
+    if (newGoal.name && newGoal.target) {
+      const goal = {
+        id: Date.now(),
+        name: newGoal.name,
+        target: parseFloat(newGoal.target),
+        current: 0,
+        emoji: newGoal.emoji
+      }
+      
+      setKidsData(prev => ({
+        ...prev,
+        [currentUser]: {
+          ...prev[currentUser],
+          goals: [...prev[currentUser].goals, goal]
+        }
+      }))
+      
+      setNewGoal({ name: '', target: '', emoji: '🎯' })
+      setCurrentScreen('goals')
+    }
+  }
+
+  const handleAddRequest = () => {
+    if (newRequest.item && newRequest.price) {
+      const request = {
+        id: Date.now(),
+        item: newRequest.item,
+        price: parseFloat(newRequest.price),
+        status: 'pending',
+        date: 'Agora'
+      }
+      
+      // Add to child's requests
+      setKidsData(prev => ({
+        ...prev,
+        [currentUser]: {
+          ...prev[currentUser],
+          requests: [...prev[currentUser].requests, request]
+        }
+      }))
+      
+      // Add to pending requests for parents
+      setPendingRequests(prev => [...prev, {
+        id: request.id,
+        child: kidsData[currentUser].name,
+        item: request.item,
+        price: request.price,
+        date: request.date
+      }])
+      
+      setNewRequest({ item: '', price: '' })
+      setCurrentScreen('requests')
+    }
   }
 
   const PinEntryView = () => {
@@ -179,6 +291,194 @@ function App() {
   const KidsView = () => {
     const childData = kidsData[currentUser]
     
+    if (currentScreen === 'new-goal') {
+      const emojis = ['🎮', '🚲', '📱', '🧱', '🎯', '⚽', '🎸', '📚', '🎨', '🏀']
+      
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-yellow-400 to-orange-500 p-4">
+          <div className="max-w-md mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <button
+                onClick={() => setCurrentScreen('goals')}
+                className="bg-white/20 p-3 rounded-full text-white hover:bg-white/30 transition-colors"
+              >
+                <ArrowLeft size={24} />
+              </button>
+              <h1 className="text-2xl font-bold text-white">Novo Sonho</h1>
+              <div className="w-12"></div>
+            </div>
+
+            {/* Form */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Qual é o seu sonho?
+                </label>
+                <input
+                  type="text"
+                  value={newGoal.name}
+                  onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
+                  placeholder="Ex: Nintendo Switch, Bicicleta..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quanto custa?
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-gray-500">R$</span>
+                  <input
+                    type="number"
+                    value={newGoal.target}
+                    onChange={(e) => setNewGoal({ ...newGoal, target: e.target.value })}
+                    placeholder="0,00"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Escolha um emoji:
+                </label>
+                <div className="grid grid-cols-5 gap-2">
+                  {emojis.map(emoji => (
+                    <button
+                      key={emoji}
+                      onClick={() => setNewGoal({ ...newGoal, emoji })}
+                      className={`p-3 rounded-xl text-2xl transition-colors ${
+                        newGoal.emoji === emoji 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-100 hover:bg-gray-200'
+                      }`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setNewGoal({ name: '', target: '', emoji: '🎯' })
+                    setCurrentScreen('goals')
+                  }}
+                  className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAddGoal}
+                  disabled={!newGoal.name || !newGoal.target}
+                  className={`flex-1 py-3 rounded-xl font-medium transition-colors ${
+                    newGoal.name && newGoal.target
+                      ? 'bg-blue-500 text-white hover:bg-blue-600'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  Criar Sonho
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    
+    if (currentScreen === 'new-request') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-pink-400 to-red-500 p-4">
+          <div className="max-w-md mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <button
+                onClick={() => setCurrentScreen('requests')}
+                className="bg-white/20 p-3 rounded-full text-white hover:bg-white/30 transition-colors"
+              >
+                <ArrowLeft size={24} />
+              </button>
+              <h1 className="text-2xl font-bold text-white">Novo Pedido</h1>
+              <div className="w-12"></div>
+            </div>
+
+            {/* Form */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  O que você quer comprar?
+                </label>
+                <input
+                  type="text"
+                  value={newRequest.item}
+                  onChange={(e) => setNewRequest({ ...newRequest, item: e.target.value })}
+                  placeholder="Ex: Chocolate, Brinquedo, Livro..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quanto custa?
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-gray-500">R$</span>
+                  <input
+                    type="number"
+                    value={newRequest.price}
+                    onChange={(e) => setNewRequest({ ...newRequest, price: e.target.value })}
+                    placeholder="0,00"
+                    step="0.01"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-6 p-4 bg-yellow-50 rounded-xl">
+                <div className="flex items-start space-x-2">
+                  <span className="text-yellow-500 mt-0.5">💡</span>
+                  <div>
+                    <p className="text-sm font-medium text-yellow-800">
+                      Seu saldo atual: R$ {childData.balance.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-yellow-600 mt-1">
+                      Os pais vão aprovar ou rejeitar seu pedido
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setNewRequest({ item: '', price: '' })
+                    setCurrentScreen('requests')
+                  }}
+                  className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAddRequest}
+                  disabled={!newRequest.item || !newRequest.price}
+                  className={`flex-1 py-3 rounded-xl font-medium transition-colors ${
+                    newRequest.item && newRequest.price
+                      ? 'bg-pink-500 text-white hover:bg-pink-600'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  Fazer Pedido
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     if (currentScreen === 'goals') {
       return (
         <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 p-4">
@@ -224,7 +524,10 @@ function App() {
                 </div>
               ))}
 
-              <button className="w-full bg-white/20 border-2 border-dashed border-white/40 text-white py-6 rounded-2xl font-semibold hover:bg-white/30 transition-colors">
+              <button 
+                onClick={() => setCurrentScreen('new-goal')}
+                className="w-full bg-white/20 border-2 border-dashed border-white/40 text-white py-6 rounded-2xl font-semibold hover:bg-white/30 transition-colors"
+              >
                 + Adicionar Novo Sonho
               </button>
             </div>
@@ -272,7 +575,10 @@ function App() {
               ))}
             </div>
 
-            <button className="w-full bg-white text-purple-600 py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+            <button 
+              onClick={() => setCurrentScreen('new-request')}
+              className="w-full bg-white text-purple-600 py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            >
               + Fazer Novo Pedido
             </button>
           </div>
