@@ -10,7 +10,7 @@ function App() {
   const [showRequestForm, setShowRequestForm] = useState(false)
   const [showGoalForm, setShowGoalForm] = useState(false)
   const [newGoal, setNewGoal] = useState({ name: '', target: '', emoji: '🎯' })
-  const [parentTab, setParentTab] = useState('resumo') // 'resumo', 'pedidos', 'limites', 'categorias', 'relatorios'
+  const [parentTab, setParentTab] = useState('resumo') // 'resumo', 'pedidos', 'limites', 'categorias', 'criancas', 'relatorios'
   const [selectedPeriod, setSelectedPeriod] = useState('month') // 'month', 'quarter', 'year'
   const [newCategory, setNewCategory] = useState({ name: '', monthlyLimit: '', quarterlyLimit: '' })
   const [showCategoryForm, setShowCategoryForm] = useState(false)
@@ -18,6 +18,12 @@ function App() {
   const [gastosSelectedPeriod, setGastosSelectedPeriod] = useState('month')
   const [showGoalFundForm, setShowGoalFundForm] = useState(null) // goalId when showing form
   const [goalFundAmount, setGoalFundAmount] = useState('')
+  
+  // Child management states
+  const [showAddChildForm, setShowAddChildForm] = useState(false)
+  const [showEditChildForm, setShowEditChildForm] = useState(null) // childKey when editing
+  const [newChild, setNewChild] = useState({ name: '', pin: '' })
+  const [editingChild, setEditingChild] = useState({ name: '', pin: '' })
   
   // Savings settings
   const [savingsSettings, setSavingsSettings] = useState({
@@ -267,6 +273,130 @@ function App() {
       })
       
       alert(`✅ Limites trimestrais reiniciados para ${getQuarterLabel(currentQuarter)}!`)
+    }
+  }
+
+  // Child management functions
+  const validatePin = (pin, excludeChild = null) => {
+    if (!/^\d{4}$/.test(pin)) {
+      return 'PIN deve ter exatamente 4 dígitos'
+    }
+    
+    // Check if PIN is already used by another child
+    const existingChild = Object.entries(kidsData).find(([key, child]) => 
+      child.pin === pin && key !== excludeChild
+    )
+    
+    if (existingChild) {
+      return `PIN já está sendo usado por ${existingChild[1].name}`
+    }
+    
+    return null
+  }
+
+  const createDefaultChildData = (name, pin) => ({
+    name,
+    pin,
+    balance: 0.00,
+    level: 1,
+    points: 0,
+    goals: [],
+    requests: [],
+    transactions: [],
+    categorySpending: categories.reduce((acc, category) => {
+      acc[category] = 0
+      return acc
+    }, {}),
+    savings: {
+      totalEarned: 0,
+      lastInterestDate: new Date().toLocaleDateString('pt-BR'),
+      monthlyEarnings: 0,
+      yearlyEarnings: 0
+    },
+    badges: [],
+    streak: {
+      current: 0,
+      best: 0,
+      type: 'save'
+    }
+  })
+
+  const addChild = () => {
+    if (!newChild.name.trim()) {
+      alert('⚠️ Por favor, insira o nome da criança!')
+      return
+    }
+
+    const pinError = validatePin(newChild.pin)
+    if (pinError) {
+      alert(`⚠️ ${pinError}`)
+      return
+    }
+
+    // Generate unique key for child
+    const childKey = newChild.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '')
+    
+    if (kidsData[childKey]) {
+      alert('⚠️ Já existe uma criança com esse nome!')
+      return
+    }
+
+    setKidsData(prev => ({
+      ...prev,
+      [childKey]: createDefaultChildData(newChild.name, newChild.pin)
+    }))
+
+    alert(`✅ ${newChild.name} adicionado(a) com sucesso!`)
+    setShowAddChildForm(false)
+    setNewChild({ name: '', pin: '' })
+  }
+
+  const updateChildPin = (childKey) => {
+    const pinError = validatePin(editingChild.pin, childKey)
+    if (pinError) {
+      alert(`⚠️ ${pinError}`)
+      return
+    }
+
+    setKidsData(prev => ({
+      ...prev,
+      [childKey]: {
+        ...prev[childKey],
+        pin: editingChild.pin,
+        name: editingChild.name
+      }
+    }))
+
+    alert(`✅ Dados de ${editingChild.name} atualizados com sucesso!`)
+    setShowEditChildForm(null)
+    setEditingChild({ name: '', pin: '' })
+  }
+
+  const removeChild = (childKey, childName) => {
+    const confirmDelete = window.confirm(
+      `⚠️ ATENÇÃO: Tem certeza que deseja remover ${childName}?\n\n` +
+      `Todos os dados serão perdidos permanentemente:\n` +
+      `• Saldo e transações\n` +
+      `• Sonhos e progresso\n` +
+      `• Medalhas e pontos\n` +
+      `• Histórico completo\n\n` +
+      `Esta ação NÃO pode ser desfeita!`
+    )
+
+    if (confirmDelete) {
+      setKidsData(prev => {
+        const updated = { ...prev }
+        delete updated[childKey]
+        return updated
+      })
+
+      // If the removed child was currently logged in, log them out
+      if (currentUser === childKey) {
+        setCurrentUser(null)
+        setCurrentTab('inicio')
+      }
+
+      alert(`✅ ${childName} foi removido(a) com sucesso!`)
     }
   }
 
@@ -687,6 +817,7 @@ function App() {
                 {key: 'pedidos', label: '⏰ Pedidos', badge: pendingRequests.length},
                 {key: 'limites', label: '🎯 Limites'},
                 {key: 'categorias', label: '🏷️ Categorias'},
+                {key: 'criancas', label: '👶 Crianças'},
                 {key: 'configuracoes', label: '⚙️ Config'},
                 {key: 'relatorios', label: '📈 Relatórios'}
               ].map(tab => (
@@ -1279,6 +1410,346 @@ function App() {
             </div>
           )}
 
+          {parentTab === 'criancas' && (
+            <div style={{
+              background: 'white',
+              borderRadius: '20px',
+              padding: '24px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+            }}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+                <h3 style={{margin: '0', fontSize: '20px', color: '#2d3748'}}>
+                  👶 Gestão de Crianças
+                </h3>
+                
+                <button
+                  onClick={() => setShowAddChildForm(true)}
+                  style={{
+                    padding: '8px 16px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  👶 Adicionar Criança
+                </button>
+              </div>
+
+              {/* Add Child Form */}
+              {showAddChildForm && (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginBottom: '20px'
+                }}>
+                  <h4 style={{margin: '0 0 16px 0', color: '#2d3748'}}>👶 Nova Criança</h4>
+                  
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                    <div>
+                      <label style={{display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#4a5568'}}>
+                        Nome da Criança
+                      </label>
+                      <input
+                        type="text"
+                        value={newChild.name}
+                        onChange={(e) => setNewChild(prev => ({...prev, name: e.target.value}))}
+                        placeholder="Ex: Maria, João..."
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '2px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: '16px',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#4a5568'}}>
+                        PIN (4 dígitos)
+                      </label>
+                      <input
+                        type="text"
+                        value={newChild.pin}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4)
+                          setNewChild(prev => ({...prev, pin: value}))
+                        }}
+                        placeholder="1234"
+                        maxLength="4"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '2px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: '16px',
+                          boxSizing: 'border-box',
+                          textAlign: 'center',
+                          letterSpacing: '0.2em'
+                        }}
+                      />
+                      <div style={{fontSize: '12px', color: '#64748b', marginTop: '4px'}}>
+                        PIN deve ser único para cada criança
+                      </div>
+                    </div>
+                    
+                    <div style={{display: 'flex', gap: '12px'}}>
+                      <button
+                        onClick={() => {
+                          setShowAddChildForm(false)
+                          setNewChild({ name: '', pin: '' })
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '12px',
+                          border: '2px solid #e2e8f0',
+                          borderRadius: '8px',
+                          background: 'white',
+                          color: '#4a5568',
+                          fontSize: '16px',
+                          fontWeight: '500',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={addChild}
+                        disabled={!newChild.name.trim() || newChild.pin.length !== 4}
+                        style={{
+                          flex: 1,
+                          padding: '12px',
+                          border: 'none',
+                          borderRadius: '8px',
+                          background: newChild.name.trim() && newChild.pin.length === 4 
+                            ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)' 
+                            : '#e2e8f0',
+                          color: newChild.name.trim() && newChild.pin.length === 4 ? 'white' : '#a0aec0',
+                          fontSize: '16px',
+                          fontWeight: '500',
+                          cursor: newChild.name.trim() && newChild.pin.length === 4 ? 'pointer' : 'not-allowed'
+                        }}
+                      >
+                        👶 Adicionar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Children List */}
+              <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                {Object.entries(kidsData).map(([childKey, child]) => (
+                  <div key={childKey} style={{
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '16px',
+                    padding: '20px'
+                  }}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
+                      <div>
+                        <h4 style={{margin: '0 0 4px 0', fontSize: '18px', color: '#2d3748'}}>
+                          {child.name}
+                        </h4>
+                        <div style={{fontSize: '12px', color: '#64748b'}}>
+                          PIN: {child.pin} • Nível {child.level} • {child.points} pontos
+                        </div>
+                      </div>
+                      
+                      <div style={{display: 'flex', gap: '8px'}}>
+                        <button
+                          onClick={() => {
+                            setEditingChild({ name: child.name, pin: child.pin })
+                            setShowEditChildForm(childKey)
+                          }}
+                          style={{
+                            padding: '8px 12px',
+                            border: '2px solid #3b82f6',
+                            borderRadius: '8px',
+                            background: '#eff6ff',
+                            color: '#3b82f6',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          onClick={() => removeChild(childKey, child.name)}
+                          style={{
+                            padding: '8px 12px',
+                            border: '2px solid #dc2626',
+                            borderRadius: '8px',
+                            background: '#fef2f2',
+                            color: '#dc2626',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          🗑️ Remover
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Edit Form */}
+                    {showEditChildForm === childKey && (
+                      <div style={{
+                        background: '#f8fafc',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '8px',
+                        padding: '16px',
+                        marginTop: '16px'
+                      }}>
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                          <div>
+                            <label style={{display: 'block', marginBottom: '4px', fontSize: '12px', color: '#4a5568'}}>
+                              Nome
+                            </label>
+                            <input
+                              type="text"
+                              value={editingChild.name}
+                              onChange={(e) => setEditingChild(prev => ({...prev, name: e.target.value}))}
+                              style={{
+                                width: '100%',
+                                padding: '8px',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                boxSizing: 'border-box'
+                              }}
+                            />
+                          </div>
+                          
+                          <div>
+                            <label style={{display: 'block', marginBottom: '4px', fontSize: '12px', color: '#4a5568'}}>
+                              PIN (4 dígitos)
+                            </label>
+                            <input
+                              type="text"
+                              value={editingChild.pin}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4)
+                                setEditingChild(prev => ({...prev, pin: value}))
+                              }}
+                              maxLength="4"
+                              style={{
+                                width: '100%',
+                                padding: '8px',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                boxSizing: 'border-box',
+                                textAlign: 'center',
+                                letterSpacing: '0.1em'
+                              }}
+                            />
+                          </div>
+                          
+                          <div style={{display: 'flex', gap: '8px'}}>
+                            <button
+                              onClick={() => {
+                                setShowEditChildForm(null)
+                                setEditingChild({ name: '', pin: '' })
+                              }}
+                              style={{
+                                flex: 1,
+                                padding: '8px',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '4px',
+                                background: 'white',
+                                color: '#4a5568',
+                                fontSize: '12px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={() => updateChildPin(childKey)}
+                              disabled={!editingChild.name.trim() || editingChild.pin.length !== 4}
+                              style={{
+                                flex: 1,
+                                padding: '8px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                background: editingChild.name.trim() && editingChild.pin.length === 4 
+                                  ? '#3b82f6' : '#e2e8f0',
+                                color: editingChild.name.trim() && editingChild.pin.length === 4 ? 'white' : '#a0aec0',
+                                fontSize: '12px',
+                                cursor: editingChild.name.trim() && editingChild.pin.length === 4 ? 'pointer' : 'not-allowed'
+                              }}
+                            >
+                              Salvar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Child Stats */}
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px'}}>
+                      <div style={{
+                        background: '#f0fdf4',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{fontSize: '18px', fontWeight: 'bold', color: '#166534'}}>
+                          R$ {child.balance.toFixed(2)}
+                        </div>
+                        <div style={{fontSize: '10px', color: '#166534'}}>Saldo</div>
+                      </div>
+                      
+                      <div style={{
+                        background: '#fef3c7',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{fontSize: '18px', fontWeight: 'bold', color: '#d97706'}}>
+                          {child.goals?.length || 0}
+                        </div>
+                        <div style={{fontSize: '10px', color: '#d97706'}}>Sonhos</div>
+                      </div>
+                      
+                      <div style={{
+                        background: '#f0f9ff',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{fontSize: '18px', fontWeight: 'bold', color: '#0369a1'}}>
+                          {child.requests?.filter(r => r.status === 'pending').length || 0}
+                        </div>
+                        <div style={{fontSize: '10px', color: '#0369a1'}}>Pedidos</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {Object.keys(kidsData).length === 0 && (
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '40px',
+                    color: '#64748b'
+                  }}>
+                    <div style={{fontSize: '48px', marginBottom: '16px'}}>👶</div>
+                    <p style={{margin: 0, fontSize: '16px'}}>Nenhuma criança cadastrada ainda</p>
+                    <p style={{margin: '8px 0 0 0', fontSize: '14px'}}>Clique em "Adicionar Criança" para começar</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {parentTab === 'configuracoes' && (
             <div style={{
               background: 'white',
@@ -1626,7 +2097,7 @@ function App() {
               padding: '12px',
               boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
             }}>
-              <div style={{display: 'flex', justifyContent: 'space-between', gap: '2px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-around', gap: '4px', overflow: 'hidden'}}>
                 {[
                   {key: 'inicio', label: '🏠 Início'},
                   {key: 'sonhos', label: '🎯 Sonhos'},
@@ -2056,7 +2527,7 @@ function App() {
               padding: '12px',
               boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
             }}>
-              <div style={{display: 'flex', justifyContent: 'space-between', gap: '2px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-around', gap: '4px', overflow: 'hidden'}}>
                 {[
                   {key: 'inicio', label: '🏠 Início'},
                   {key: 'sonhos', label: '🎯 Sonhos'},
@@ -2304,11 +2775,12 @@ function App() {
             padding: '12px',
             boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
           }}>
-            <div style={{display: 'flex', justifyContent: 'space-between', gap: '2px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-around', gap: '4px', overflow: 'hidden'}}>
               {[
                 {key: 'inicio', label: '🏠 Início'},
                 {key: 'sonhos', label: '🎯 Sonhos'},
-                {key: 'gastos', label: '📊 Gastos'}
+                {key: 'gastos', label: '📊 Gastos'},
+                {key: 'regras', label: '🏆 Regras'}
               ].map(tab => (
                 <button key={tab.key} 
                   onClick={() => setCurrentTab(tab.key)}
@@ -3033,7 +3505,7 @@ function App() {
             boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
             marginBottom: '16px'
           }}>
-            <div style={{display: 'flex', justifyContent: 'space-between', gap: '2px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-around', gap: '4px', overflow: 'hidden'}}>
               {[
                 {key: 'inicio', label: '🏠 Início'},
                 {key: 'sonhos', label: '🎯 Sonhos'},
@@ -3044,10 +3516,10 @@ function App() {
                   onClick={() => setCurrentTab(tab.key)}
                   style={{
                     flex: 1,
-                    padding: '6px 2px',
+                    padding: '8px 6px',
                     border: 'none',
                     borderRadius: '12px',
-                    fontSize: '10px',
+                    fontSize: '11px',
                     fontWeight: '600',
                     cursor: 'pointer',
                     background: currentTab === tab.key ? 'linear-gradient(135deg, #4299e1 0%, #667eea 100%)' : 'transparent',
