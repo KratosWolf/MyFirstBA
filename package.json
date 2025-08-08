@@ -1,33 +1,49 @@
 {
-  "name": "myfirstba",
+  "name": "kids-bank-app",
+  "private": true,
   "version": "1.0.0",
-  "description": "First Business Automation project with GitHub repository configuration and deployment strategy",
-  "main": "index.js",
+  "type": "module",
+  "description": "Banco da Família - Sistema de educação financeira para crianças com controle parental",
   "scripts": {
-    "test": "echo \"✅ Tests passed - no tests configured yet\"",
-    "build": "echo \"✅ Build completed - static HTML project\"",
-    "lint": "echo \"✅ Linting passed - no linting configured yet\"",
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
     "commit": "cz",
-    "semantic-release": "semantic-release",
-    "dev": "python3 -m http.server 3000 || python -m SimpleHTTPServer 3000"
+    "semantic-release": "semantic-release"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.263.1",
+    "firebase": "^10.7.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6",
+    "vite": "^5.0.8"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/KratosWolf/MyFirstBA.git"
   },
   "keywords": [
-    "business-automation",
-    "github-actions",
-    "ci-cd",
-    "deployment",
-    "vercel"
+    "kids-banking",
+    "financial-education",
+    "react",
+    "firebase",
+    "parental-control"
   ],
   "author": "Tiago Fernandes",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/KratosWolf/MyFirstBA/issues"
-  },
-  "homepage": "https://github.com/KratosWolf/MyFirstBA#readme",
   "config": {
     "commitizen": {
       "path": "cz-conventional-changelog"
